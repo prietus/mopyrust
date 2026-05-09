@@ -1,0 +1,100 @@
+:root,
+:root[data-theme="midnight"] {
+  color-scheme: dark;
+  --bg-0: #0b0c10;
+  --bg-1: #10131a;
+  --bg-2: #161a23;
+  --bg-hover: #1f242b;
+  --bg-elev: #181c25;
+  --border: #283047;
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --text: #f2f5fb;
+  --text-mid: #aeb3bf;
+  --text-muted: #7c818d;
+  --text-faint: #595e6f;
+  --accent: #8dc9ed;
+  --accent-soft: rgba(141, 201, 237, 0.16);
+  --accent-ring: rgba(141, 201, 237, 0.45);
+  --accent-text: #0b0c10;
+
+  --backend-tidal: #33d9d9;
+  --backend-local: #66d98c;
+  --backend-spotify: #66d966;
+  --backend-podcast: #d98c66;
+  --backend-other: #aeb3bf;
+
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.32);
+  --shadow-strong: 0 12px 40px rgba(0, 0, 0, 0.5);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+}
+
+:root[data-theme="soft-dark"] {
+  color-scheme: dark;
+  --bg-0: #16181f;
+  --bg-1: #1c1f27;
+  --bg-2: #242832;
+  --bg-hover: #2c3140;
+  --bg-elev: #262a35;
+  --border: #333a47;
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --text: #f1f2f6;
+  --text-mid: #b4b8c2;
+  --text-muted: #888d9c;
+  --text-faint: #656a79;
+  --accent: #7a99ff;
+  --accent-soft: rgba(122, 153, 255, 0.16);
+  --accent-ring: rgba(122, 153, 255, 0.4);
+  --accent-text: #0b0c10;
+}
+
+:root[data-theme="daylight"] {
+  color-scheme: light;
+  --bg-0: #f6f7fa;
+  --bg-1: #ffffff;
+  --bg-2: #f1f3f6;
+  --bg-hover: #e9ecf1;
+  --bg-elev: #f8f9fb;
+  --border: #d4d8e0;
+  --border-soft: rgba(0, 0, 0, 0.06);
+  --text: #171c26;
+  --text-mid: #4c5463;
+  --text-muted: #71798a;
+  --text-faint: #949cab;
+  --accent: #3263d8;
+  --accent-soft: rgba(50, 99, 216, 0.1);
+  --accent-ring: rgba(50, 99, 216, 0.35);
+  --accent-text: #ffffff;
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.08);
+  --shadow-strong: 0 12px 40px rgba(0, 0, 0, 0.16);
+}
+
+:root[data-theme="solar"] {
+  color-scheme: dark;
+  --bg-0: #1b1512;
+  --bg-1: #231c18;
+  --bg-2: #2d231d;
+  --bg-hover: #3a2e26;
+  --bg-elev: #2f2620;
+  --border: #4a3b2f;
+  --border-soft: rgba(255, 243, 224, 0.06);
+  --text: #f5edd9;
+  --text-mid: #c6b89e;
+  --text-muted: #948773;
+  --text-faint: #6c6050;
+  --accent: #fbad4a;
+  --accent-soft: rgba(251, 173, 74, 0.16);
+  --accent-ring: rgba(251, 173, 74, 0.4);
+  --accent-text: #1b1512;
+}

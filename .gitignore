@@ -1,0 +1,17 @@
+# node
+node_modules/
+dist/
+*.log
+npm-debug.log*
+
+# rust / tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# editor / OS
+.DS_Store
+.vscode/
+.idea/
+
+# local tooling state
+.claude/
