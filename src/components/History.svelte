@@ -220,14 +220,19 @@ systemctl --user restart mopidy</pre>
             <ul class="rank-list">
               {#each store.topArtists as a, i (a.artist + i)}
                 <li>
-                  <span class="rank-num">{i + 1}</span>
-                  {#if a.sample_album_uri}
-                    <Cover uri={a.sample_album_uri} size={32} radius="50%" />
-                  {:else}
-                    <span class="rank-avatar"><Icon name="user" size={14} stroke={1.6} /></span>
-                  {/if}
-                  <span class="rank-name truncate">{a.artist}</span>
-                  <span class="rank-val">{fmtHM(a.total_played_ms)}</span>
+                  <button
+                    class="rank-row"
+                    onclick={() => store.navTo({ kind: "artist-detail", name: a.artist })}
+                  >
+                    <span class="rank-num">{i + 1}</span>
+                    {#if a.sample_album_uri}
+                      <Cover uri={a.sample_album_uri} size={32} radius="50%" />
+                    {:else}
+                      <span class="rank-avatar"><Icon name="user" size={14} stroke={1.6} /></span>
+                    {/if}
+                    <span class="rank-name truncate">{a.artist}</span>
+                    <span class="rank-val">{fmtHM(a.total_played_ms)}</span>
+                  </button>
                 </li>
               {/each}
             </ul>
@@ -246,12 +251,13 @@ systemctl --user restart mopidy</pre>
               {#each store.topAlbums as a, i (a.album_uri ?? (a.artist + a.album))}
                 <li>
                   <button
-                    class="rank-clickable"
+                    class="rank-row"
                     onclick={() => a.album_uri && store.navTo({ kind: "album-detail", uri: a.album_uri, label: a.album })}
                     disabled={!a.album_uri}
                   >
+                    <span class="rank-num">{i + 1}</span>
                     {#if a.album_uri}
-                      <Cover uri={a.album_uri} size={36} radius="var(--radius-sm)" />
+                      <Cover uri={a.album_uri} size={32} radius="var(--radius-sm)" />
                     {:else}
                       <span class="rank-avatar sq"><Icon name="disc" size={14} stroke={1.6} /></span>
                     {/if}
@@ -484,33 +490,54 @@ systemctl --user restart mopidy</pre>
   /* ── Rank list (top artists / albums) ────────────────────── */
   .rank-list {
     list-style: none; padding: 0; margin: 0;
-    display: flex; flex-direction: column; gap: 4px;
+    display: flex; flex-direction: column; gap: 1px;
     flex: 1;
   }
-  .rank-list > li { display: contents; }
-  .rank-list > li > * {
-    display: grid; grid-template-columns: 18px auto 1fr auto;
-    gap: 10px; align-items: center;
-    padding: 4px 0;
-    background: transparent; border: none;
-    font-size: 12px; color: var(--text);
+  .rank-row {
+    display: grid;
+    grid-template-columns: 18px 32px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    padding: 4px 6px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text);
     text-align: left;
+    cursor: pointer;
+    transition: background 80ms ease;
   }
-  .rank-clickable { cursor: pointer; padding: 4px 6px; border-radius: var(--radius-sm); transition: background 80ms ease; }
-  .rank-clickable:hover:not(:disabled) { background: var(--bg-hover); }
-  .rank-clickable:disabled { cursor: default; }
-  .rank-num { font-size: 10.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; text-align: right; }
+  .rank-row:hover:not(:disabled) { background: var(--bg-hover); }
+  .rank-row:disabled { cursor: default; }
+  .rank-num {
+    font-size: 10.5px; color: var(--text-faint);
+    font-variant-numeric: tabular-nums; text-align: right;
+  }
   .rank-avatar {
     width: 32px; height: 32px; border-radius: 50%;
     background: var(--bg-2);
     display: inline-flex; align-items: center; justify-content: center;
     color: var(--text-faint);
   }
-  .rank-avatar.sq { width: 36px; height: 36px; border-radius: var(--radius-sm); }
-  .rank-name { font-size: 12px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .rank-meta { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .rank-sub { font-size: 10.5px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .rank-val { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rank-avatar.sq { border-radius: var(--radius-sm); }
+  .rank-name {
+    font-size: 12px; font-weight: 500;
+    min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .rank-meta {
+    display: flex; flex-direction: column; gap: 1px;
+    min-width: 0;
+  }
+  .rank-sub {
+    font-size: 10.5px; color: var(--text-muted);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .rank-val {
+    font-size: 11px; color: var(--text-faint);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
 
   /* ── Bar charts ──────────────────────────────────────────── */
   .bars {
