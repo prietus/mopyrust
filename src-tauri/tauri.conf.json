@@ -26,8 +26,17 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
     "targets": "all",
-    "icon": []
+    "category": "Music",
+    "shortDescription": "Native Mopidy client",
+    "longDescription": "Native Mopidy client for desktop, written in Rust + Tauri + Svelte.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   }
 }
