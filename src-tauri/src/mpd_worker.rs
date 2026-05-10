@@ -1,9 +1,11 @@
+use std::sync::Arc;
 use std::time::Duration;
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
+use tokio::sync::Notify;
 use tokio::time::sleep;
 
 use crate::models::AudioFormat;
@@ -27,19 +29,22 @@ struct ConnEvent {
 /// `mpd:changed` (subsystems list). Never sends commands — those go via
 /// Mopidy JSON-RPC because mopidy-mpd's tracklist desyncs from core when
 /// the queue is mutated through the HTTP API.
-pub fn spawn(app: AppHandle, host: String, port: u16) {
+pub fn spawn(app: AppHandle, host: String, port: u16, refresh: Arc<Notify>) {
     tauri::async_runtime::spawn(async move {
-        run(app, host, port).await;
+        run(app, host, port, refresh).await;
     });
 }
 
-async fn run(app: AppHandle, host: String, port: u16) {
+async fn run(app: AppHandle, host: String, port: u16, refresh: Arc<Notify>) {
     loop {
         let _ = app.emit(
             "mpd:connection",
             ConnEvent { state: ConnState::Connecting, error: None },
         );
-        match run_session(&app, &host, port).await {
+        // Reconnects probably also mean state changed since last view —
+        // signal MPRIS so it doesn't lag.
+        refresh.notify_one();
+        match run_session(&app, &host, port, &refresh).await {
             Ok(()) => {
                 let _ = app.emit(
                     "mpd:connection",
@@ -57,7 +62,12 @@ async fn run(app: AppHandle, host: String, port: u16) {
     }
 }
 
-async fn run_session(app: &AppHandle, host: &str, port: u16) -> Result<(), String> {
+async fn run_session(
+    app: &AppHandle,
+    host: &str,
+    port: u16,
+    refresh: &Notify,
+) -> Result<(), String> {
     let stream = TcpStream::connect((host, port))
         .await
         .map_err(|e| format!("mpd connect {host}:{port}: {e}"))?;
@@ -105,6 +115,8 @@ async fn run_session(app: &AppHandle, host: &str, port: u16) -> Result<(), Strin
             // The audio chain may have changed (next track, different sample
             // rate), so re-probe `status` and emit a fresh format.
             refresh_audio(&mut r, &mut w, app).await?;
+            // Wake the MPRIS pusher so the OS widget mirrors the new state.
+            refresh.notify_one();
         }
     }
 }

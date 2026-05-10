@@ -4,9 +4,10 @@ mod metadata;
 mod models;
 mod mopidy_client;
 mod mpd_worker;
+mod mpris;
 
 use std::collections::{HashMap, HashSet};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use base64::Engine;
 use serde::Serialize;
@@ -673,7 +674,18 @@ pub fn run() {
         .setup(|app| {
             let cfg = config::load_or_template();
             let mopidy = Mopidy::new(&cfg.host, cfg.http_port);
-            mpd_worker::spawn(app.handle().clone(), cfg.host.clone(), cfg.mpd_port);
+            // Notify shared between the MPD idle worker (producer) and the
+            // MPRIS task (consumer): one notification per playback change.
+            let mpris_refresh = Arc::new(tokio::sync::Notify::new());
+            mpd_worker::spawn(
+                app.handle().clone(),
+                cfg.host.clone(),
+                cfg.mpd_port,
+                mpris_refresh.clone(),
+            );
+            // try_init returns None on platforms/sessions where the OS
+            // controls can't initialize (e.g. headless). We still launch.
+            let _mpris = mpris::MprisHandle::try_init(mopidy.clone(), mpris_refresh);
             app.manage(AppState {
                 cfg: Mutex::new(cfg),
                 mopidy,
