@@ -29,6 +29,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Syncing project version to $VERSION"
+
+          tmp=$(mktemp)
+          jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > "$tmp"
+          mv "$tmp" src-tauri/tauri.conf.json
+
+          tmp=$(mktemp)
+          jq --arg v "$VERSION" '.version = $v' package.json > "$tmp"
+          mv "$tmp" package.json
+
+          tmp=$(mktemp)
+          awk -v v="$VERSION" '
+            /^\[/ { in_pkg = ($0 == "[package]") }
+            in_pkg && /^version[[:space:]]*=/ && !done { sub(/=.*/, "= \"" v "\""); done=1 }
+            { print }
+          ' src-tauri/Cargo.toml > "$tmp"
+          mv "$tmp" src-tauri/Cargo.toml
+
+          echo "--- patched ---"
+          grep -m1 '"version"' src-tauri/tauri.conf.json
+          grep -m1 '"version"' package.json
+          awk '/^\[package\]/{f=1} f && /^version/{print; exit}' src-tauri/Cargo.toml
+
       - name: install Linux build deps
         if: matrix.platform == 'ubuntu-22.04'
         run: |
