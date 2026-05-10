@@ -49,15 +49,15 @@
       <div class="conn" data-state={store.conn}>
         <span class="dot"></span>
         <span class="state">
-          {#if store.conn === "connected"}conectado{:else if store.conn === "connecting"}conectando…{:else if store.conn === "disconnected"}desconectado{:else}error{/if}
+          {#if store.conn === "connected"}connected{:else if store.conn === "connecting"}connecting…{:else if store.conn === "disconnected"}disconnected{:else}error{/if}
         </span>
       </div>
-      <button class="settings-btn" aria-label="ajustes" title="ajustes" onclick={onOpenSettings}>
+      <button class="settings-btn" aria-label="settings" title="settings" onclick={onOpenSettings}>
         <Icon name="settings" size={14} stroke={1.7} />
       </button>
     </div>
     {#if store.config}
-      <button class="host" onclick={onOpenSettings} title="cambiar host">
+      <button class="host" onclick={onOpenSettings} title="change host">
         {store.config.host}:{store.config.mpd_port}
       </button>
     {/if}

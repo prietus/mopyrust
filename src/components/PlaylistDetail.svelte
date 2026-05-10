@@ -38,7 +38,7 @@
       <div class="chips">
         <BackendBadge backend={backendOf(uri)} size="md" />
         {#if tracks.length}
-          <span class="pill">{tracks.length} {tracks.length === 1 ? "pista" : "pistas"}</span>
+          <span class="pill">{tracks.length} {tracks.length === 1 ? "track" : "tracks"}</span>
         {/if}
         {#if runtime > 0}
           <span class="pill">{fmtMs(runtime)}</span>
@@ -47,11 +47,11 @@
       <div class="actions">
         <button class="btn primary" onclick={playAll} disabled={!tracks.length}>
           <Icon name="play" size={13} />
-          reproducir todo
+          play all
         </button>
         <button class="btn" onclick={queueAll} disabled={!tracks.length}>
           <Icon name="plus" size={13} stroke={2} />
-          añadir a cola
+          add to queue
         </button>
       </div>
     </div>
@@ -59,9 +59,9 @@
 
   <div class="tracks">
     {#if loading && tracks.length === 0}
-      <div class="empty">cargando pistas…</div>
+      <div class="empty">loading tracks…</div>
     {:else if tracks.length === 0}
-      <div class="empty">playlist vacía</div>
+      <div class="empty">empty playlist</div>
     {:else}
       {#each tracks as t, i (i + "-" + t.uri)}
         <TrackRow track={t} index={i} />

@@ -55,9 +55,9 @@
 
   <div class="body">
     {#if store.browseLoading}
-      <div class="empty">cargando…</div>
+      <div class="empty">loading…</div>
     {:else if store.browseItems.length === 0}
-      <div class="empty">vacío</div>
+      <div class="empty">empty</div>
     {:else}
       {#each store.browseItems as r (r.uri)}
         {@const k = (r.kind || "").toLowerCase()}
@@ -77,7 +77,7 @@
           </div>
           <BackendBadge backend={backendOf(r.uri)} />
           {#if k === "track"}
-            <button class="plus" onclick={(e) => enqueue(r, e)} aria-label="añadir a cola">
+            <button class="plus" onclick={(e) => enqueue(r, e)} aria-label="add to queue">
               <Icon name="plus" size={13} stroke={2} />
             </button>
           {/if}

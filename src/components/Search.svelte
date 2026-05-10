@@ -45,7 +45,7 @@
       <span class="ic"><Icon name="search" size={14} stroke={1.8} /></span>
       <input
         type="search"
-        placeholder="buscar en tidal + librería local…"
+        placeholder="search tidal + local library…"
         bind:value={store.searchInput}
       />
     </form>
@@ -54,15 +54,15 @@
   <div class="body">
     {#if !store.searchQuery}
       <div class="empty">
-        <div class="empty-title">encuentra música en tidal y en tu librería local</div>
-        <div class="empty-sub">escribe arriba y pulsa enter</div>
+        <div class="empty-title">find music on tidal and in your local library</div>
+        <div class="empty-sub">type above and press enter</div>
       </div>
     {:else if store.searchLoading}
-      <div class="empty">buscando «{store.searchQuery}»…</div>
+      <div class="empty">searching «{store.searchQuery}»…</div>
     {:else}
       {#if allAlbums.length}
         <section>
-          <h3>álbumes</h3>
+          <h3>albums</h3>
           <div class="grid">
             {#each allAlbums as a (a.uri)}
               <AlbumCard
@@ -78,7 +78,7 @@
       {/if}
       {#if allTracks.length}
         <section>
-          <h3>pistas</h3>
+          <h3>tracks</h3>
           <div class="rows">
             {#each allTracks as r, i (i + r.track.uri)}
               <TrackRow track={r.track} />
@@ -87,7 +87,7 @@
         </section>
       {/if}
       {#if !allAlbums.length && !allTracks.length}
-        <div class="empty">sin resultados para «{store.searchQuery}»</div>
+        <div class="empty">no results for «{store.searchQuery}»</div>
       {/if}
     {/if}
   </div>

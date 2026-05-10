@@ -59,12 +59,12 @@
 <div class="page">
   <header class="page-header">
     <h2>Queue</h2>
-    <span class="count">{store.queue.length} {store.queue.length === 1 ? "pista" : "pistas"}</span>
+    <span class="count">{store.queue.length} {store.queue.length === 1 ? "track" : "tracks"}</span>
   </header>
 
   <div class="body">
     {#if store.queue.length === 0}
-      <div class="empty">la cola está vacía</div>
+      <div class="empty">queue is empty</div>
     {:else}
       {#each store.queue as tl, i (tl.tlid)}
         {@const isCurrent = store.currentTlid === tl.tlid}

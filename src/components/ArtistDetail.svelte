@@ -40,7 +40,7 @@
         {#if info?.type}<span>{info.type}</span><span class="dot">·</span>{/if}
         {#if info?.area}<span>{info.area}</span><span class="dot">·</span>{/if}
         {#if info?.begin_date}<span>{info.begin_date}{info.end_date ? `–${info.end_date}` : ""}</span><span class="dot">·</span>{/if}
-        <span>{albums.length} {albums.length === 1 ? "álbum" : "álbumes"}</span>
+        <span>{albums.length} {albums.length === 1 ? "album" : "albums"}</span>
       </div>
     </div>
   </header>
@@ -51,13 +51,13 @@
         <span class="chev" class:open={bioOpen}>
           <Icon name="chevron-right" size={13} stroke={1.7} />
         </span>
-        <span class="bio-label">biografía · {wiki.title}</span>
+        <span class="bio-label">biography · {wiki.title}</span>
         <span class="bio-lang">{wiki.language}</span>
       </button>
       {#if bioOpen}
         <p class="bio-extract">{wiki.extract}</p>
         {#if wiki.page_url}
-          <a class="bio-link" href={wiki.page_url} target="_blank" rel="noreferrer">ver en Wikipedia</a>
+          <a class="bio-link" href={wiki.page_url} target="_blank" rel="noreferrer">view on Wikipedia</a>
         {/if}
       {/if}
     </section>
@@ -65,7 +65,7 @@
 
   {#if info?.members?.length}
     <section class="members">
-      <h3>Miembros</h3>
+      <h3>Members</h3>
       <ul>
         {#each info.members as m (m.name + m.period)}
           <li>
@@ -80,11 +80,11 @@
 
   <div class="body">
     {#if loading && albums.length === 0}
-      <div class="empty">cargando álbumes…</div>
+      <div class="empty">loading albums…</div>
     {:else if albums.length === 0}
       <div class="empty">
-        <div class="empty-title">sin álbumes</div>
-        <div class="empty-sub">no se encontraron álbumes para este artista</div>
+        <div class="empty-title">no albums</div>
+        <div class="empty-sub">no albums found for this artist</div>
       </div>
     {:else}
       <div class="grid">

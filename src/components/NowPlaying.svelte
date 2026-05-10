@@ -87,8 +87,8 @@
     <button
       class="pane-toggle"
       class:active={showQueue}
-      aria-label="cola"
-      title="cola"
+      aria-label="queue"
+      title="queue"
       onclick={() => setPane("queue")}
     >
       <Icon name="list" size={15} stroke={1.7} />
@@ -168,14 +168,14 @@
     {#if showLyrics}
       <aside class="lyrics-pane">
         <div class="qhead">
-          <span class="qtitle">Letra</span>
-          {#if synced.length}<span class="qcount">sincronizada · {synced.length} líneas</span>
-          {:else if lyrics?.plain}<span class="qcount">texto plano</span>
+          <span class="qtitle">Lyrics</span>
+          {#if synced.length}<span class="qcount">synced · {synced.length} lines</span>
+          {:else if lyrics?.plain}<span class="qcount">plain text</span>
           {/if}
         </div>
         <div class="lyrics-body" bind:this={lyricsListEl}>
           {#if pending && !lyrics}
-            <div class="qempty">buscando letra…</div>
+            <div class="qempty">searching lyrics…</div>
           {:else if lyrics?.instrumental}
             <div class="qempty">instrumental</div>
           {:else if synced.length > 0}
@@ -199,13 +199,13 @@
             <pre class="plain">{lyrics.plain}</pre>
           {:else}
             <div class="qempty">
-              <div>no se encontró letra</div>
+              <div>no lyrics found</div>
               <button
                 class="retry"
                 onclick={() => store.retryLyrics(store.current)}
                 disabled={pending}
               >
-                {pending ? "buscando…" : "reintentar"}
+                {pending ? "searching…" : "retry"}
               </button>
             </div>
           {/if}
@@ -214,12 +214,12 @@
     {:else if showQueue}
       <aside class="queue-pane">
         <div class="qhead">
-          <span class="qtitle">A continuación</span>
+          <span class="qtitle">Up next</span>
           <span class="qcount">{store.queue.length}</span>
         </div>
         <div class="qlist" bind:this={queueListEl}>
           {#if store.queue.length === 0}
-            <div class="qempty">la cola está vacía</div>
+            <div class="qempty">queue is empty</div>
           {:else}
             {#each store.queue as tl (tl.tlid)}
               {@const isCurrent = store.currentTlid === tl.tlid}

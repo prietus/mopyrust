@@ -61,7 +61,7 @@
 <div class="page">
   <button class="back" onclick={() => store.navBack()}>
     <Icon name="chevron-left" size={14} stroke={1.8} />
-    <span>atrás</span>
+    <span>back</span>
   </button>
 
   <div class="hero">
@@ -77,7 +77,7 @@
           <span class="pill">{String(year).split("-")[0]}</span>
         {/if}
         {#if tracks.length}
-          <span class="pill">{tracks.length} pistas</span>
+          <span class="pill">{tracks.length} {tracks.length === 1 ? "track" : "tracks"}</span>
         {/if}
         {#if runtime > 0}
           <span class="pill">{fmtMs(runtime)}</span>
@@ -102,11 +102,11 @@
       <div class="actions">
         <button class="btn primary" onclick={playAll} disabled={!tracks.length}>
           <Icon name="play" size={13} />
-          reproducir todo
+          play all
         </button>
         <button class="btn" onclick={queueAll} disabled={!tracks.length}>
           <Icon name="plus" size={13} stroke={2} />
-          añadir a cola
+          add to queue
         </button>
       </div>
     </div>
@@ -118,14 +118,14 @@
         <span class="chev" class:open={bioOpen}>
           <Icon name="chevron-right" size={13} stroke={1.7} />
         </span>
-        <span class="wiki-title">reseña · {wiki.title}</span>
+        <span class="wiki-title">review · {wiki.title}</span>
         <span class="wiki-lang">{wiki.language}</span>
       </button>
       {#if bioOpen}
         <p class="wiki-extract">{wiki.extract}</p>
         {#if wiki.page_url}
           <a class="wiki-link" href={wiki.page_url} target="_blank" rel="noreferrer">
-            ver en Wikipedia
+            view on Wikipedia
           </a>
         {/if}
       {/if}
@@ -134,16 +134,16 @@
 
   {#if producers.length || engineers.length || mastering.length}
     <section class="credits">
-      <h3>Créditos</h3>
+      <h3>Credits</h3>
       {#if producers.length}
         <div class="credit-row">
-          <span class="credit-label">producción</span>
+          <span class="credit-label">production</span>
           <span class="credit-names">{producers.join(", ")}</span>
         </div>
       {/if}
       {#if engineers.length}
         <div class="credit-row">
-          <span class="credit-label">ingeniería</span>
+          <span class="credit-label">engineering</span>
           <span class="credit-names">{engineers.join(", ")}</span>
         </div>
       {/if}
@@ -158,9 +158,9 @@
 
   <div class="tracklist">
     {#if loading && tracks.length === 0}
-      <div class="empty">cargando pistas…</div>
+      <div class="empty">loading tracks…</div>
     {:else if tracks.length === 0}
-      <div class="empty">álbum vacío</div>
+      <div class="empty">empty album</div>
     {:else}
       {#each tracks as t, i (t.uri)}
         <TrackRow track={t} index={i} showAlbum={false} showBackend={false} />

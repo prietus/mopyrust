@@ -14,22 +14,22 @@
   <header class="page-header">
     <div class="title-row">
       <h2>Albums</h2>
-      <span class="count">{store.albums.length} álbumes</span>
+      <span class="count">{store.albums.length} albums</span>
     </div>
     <input
       type="search"
-      placeholder="filtrar…"
+      placeholder="filter…"
       bind:value={store.albumsFilter}
     />
   </header>
 
   <div class="body">
     {#if store.albumsLoading && store.albums.length === 0}
-      <div class="empty">descubriendo álbumes…</div>
+      <div class="empty">discovering albums…</div>
     {:else if store.albums.length === 0}
       <div class="empty">
-        <div class="empty-title">no hay álbumes</div>
-        <div class="empty-sub">comprueba que mopidy-local y/o mopidy-tidal estén configurados</div>
+        <div class="empty-title">no albums</div>
+        <div class="empty-sub">check that mopidy-local and/or mopidy-tidal are configured</div>
       </div>
     {:else}
       <div class="grid">

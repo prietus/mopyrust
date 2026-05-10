@@ -22,16 +22,16 @@
       <h2>Playlists</h2>
       <span class="count">{store.playlists.length}</span>
     </div>
-    <input type="search" placeholder="filtrar…" bind:value={filter} />
+    <input type="search" placeholder="filter…" bind:value={filter} />
   </header>
 
   <div class="body">
     {#if store.playlistsLoading && store.playlists.length === 0}
-      <div class="empty">cargando playlists…</div>
+      <div class="empty">loading playlists…</div>
     {:else if store.playlists.length === 0}
       <div class="empty">
-        <div class="empty-title">sin playlists</div>
-        <div class="empty-sub">crea playlists en mopidy o sincroniza desde tidal</div>
+        <div class="empty-title">no playlists</div>
+        <div class="empty-sub">create playlists in mopidy or sync from tidal</div>
       </div>
     {:else}
       <ul class="list">

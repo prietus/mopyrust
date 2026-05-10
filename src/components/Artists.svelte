@@ -20,16 +20,16 @@
       <h2>Artists</h2>
       <span class="count">{store.artists.length}</span>
     </div>
-    <input type="search" placeholder="filtrar…" bind:value={filter} />
+    <input type="search" placeholder="filter…" bind:value={filter} />
   </header>
 
   <div class="body">
     {#if store.artistsLoading && store.artists.length === 0}
-      <div class="empty">cargando artistas…</div>
+      <div class="empty">loading artists…</div>
     {:else if store.artists.length === 0}
       <div class="empty">
-        <div class="empty-title">no hay artistas</div>
-        <div class="empty-sub">comprueba que mopidy esté indexando</div>
+        <div class="empty-title">no artists</div>
+        <div class="empty-sub">check that mopidy is indexing</div>
       </div>
     {:else}
       <ul class="list">

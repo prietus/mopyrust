@@ -49,7 +49,7 @@
     <BackendBadge backend={backendOf(track.uri)} />
   {/if}
   <span class="dur">{fmtMs(track.length)}</span>
-  <button class="plus" onclick={enqueue} aria-label="añadir a cola" title="añadir a cola">
+  <button class="plus" onclick={enqueue} aria-label="add to queue" title="add to queue">
     <Icon name="plus" size={14} stroke={2} />
   </button>
 </div>

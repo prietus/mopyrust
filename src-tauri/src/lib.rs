@@ -414,10 +414,10 @@ pub struct SaveConfigArgs {
 async fn save_config(state: State<'_, AppState>, args: SaveConfigArgs) -> Result<(), String> {
     let host = args.host.trim();
     if host.is_empty() {
-        return Err("host vacío".into());
+        return Err("empty host".into());
     }
     if args.mpd_port == 0 || args.http_port == 0 {
-        return Err("puertos inválidos".into());
+        return Err("invalid ports".into());
     }
     let trim_opt = |s: Option<String>| s.map(|x| x.trim().to_string()).filter(|x| !x.is_empty());
     let cfg = AppConfig {

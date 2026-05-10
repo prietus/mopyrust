@@ -69,16 +69,16 @@
   <div class="modal" role="document">
     <header>
       <h2 id="settings-title">Settings</h2>
-      <button class="close" aria-label="cerrar" onclick={onClose}>
+      <button class="close" aria-label="close" onclick={onClose}>
         <Icon name="x" size={14} stroke={2} />
       </button>
     </header>
 
     <div class="form">
       <section>
-        <h3>Servidor</h3>
+        <h3>Server</h3>
         <p class="hint">
-          Host del servidor mopidy (ej. <code>192.168.1.44</code> o <code>wasp.local</code>).
+          Mopidy server host (e.g. <code>192.168.1.44</code> or <code>wasp.local</code>).
         </p>
 
         <label>
@@ -98,7 +98,7 @@
         </div>
 
         <label>
-          <span>Tema</span>
+          <span>Theme</span>
           <select bind:value={theme}>
             {#each themes as t (t)}
               <option value={t}>{t}</option>
@@ -116,22 +116,22 @@
           <span class="chev" class:open={showKeys}>
             <Icon name="chevron-right" size={14} stroke={1.7} />
           </span>
-          <h3>Servicios de metadata</h3>
-          <span class="optional">opcional</span>
+          <h3>Metadata services</h3>
+          <span class="optional">optional</span>
         </button>
 
         {#if showKeys}
           <p class="hint">
-            Habilitan biografías, géneros, artistas similares y fotos en alta resolución.
-            Sin estas claves seguirás teniendo MusicBrainz y Wikipedia.
+            Enables biographies, genres, similar artists and high-resolution photos.
+            Without these keys you still get MusicBrainz and Wikipedia.
           </p>
 
           <label>
             <span>Last.fm API key</span>
-            <input type="password" bind:value={lastfm} placeholder="32 caracteres hex" autocomplete="off" />
+            <input type="password" bind:value={lastfm} placeholder="32 hex characters" autocomplete="off" />
             <span class="field-hint">
-              <a href="https://www.last.fm/api/account/create" target="_blank" rel="noreferrer">crear key</a>
-              · bio del artista, tags, similar
+              <a href="https://www.last.fm/api/account/create" target="_blank" rel="noreferrer">create key</a>
+              · artist bio, tags, similar
             </span>
           </label>
 
@@ -139,8 +139,8 @@
             <span>Fanart.tv API key</span>
             <input type="password" bind:value={fanart} placeholder="" autocomplete="off" />
             <span class="field-hint">
-              <a href="https://fanart.tv/get-an-api-key/" target="_blank" rel="noreferrer">obtener key</a>
-              · imágenes HD del artista
+              <a href="https://fanart.tv/get-an-api-key/" target="_blank" rel="noreferrer">get key</a>
+              · HD artist images
             </span>
           </label>
 
@@ -148,8 +148,8 @@
             <span>Discogs personal token</span>
             <input type="password" bind:value={discogs} placeholder="" autocomplete="off" />
             <span class="field-hint">
-              <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noreferrer">generar token</a>
-              · créditos de pressing exactos
+              <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noreferrer">generate token</a>
+              · exact pressing credits
             </span>
           </label>
         {/if}
@@ -157,7 +157,7 @@
 
       {#if store.config?.config_path}
         <div class="path">
-          <span class="path-label">archivo de configuración</span>
+          <span class="path-label">config file</span>
           <code>{store.config.config_path}</code>
         </div>
       {/if}
@@ -166,15 +166,15 @@
         <div class="error">{error}</div>
       {/if}
       {#if saved && !error}
-        <div class="ok">guardado · reinicia para aplicar cambios de host</div>
+        <div class="ok">saved · restart to apply host changes</div>
       {/if}
     </div>
 
     <footer>
-      <button class="btn" onclick={onClose} disabled={saving}>cancelar</button>
-      <button class="btn" onclick={() => save(false)} disabled={saving}>guardar</button>
+      <button class="btn" onclick={onClose} disabled={saving}>cancel</button>
+      <button class="btn" onclick={() => save(false)} disabled={saving}>save</button>
       <button class="btn primary" onclick={() => save(true)} disabled={saving}>
-        guardar y reiniciar
+        save and restart
       </button>
     </footer>
   </div>
