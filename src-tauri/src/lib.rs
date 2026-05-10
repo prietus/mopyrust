@@ -261,6 +261,189 @@ async fn enqueue_uris(state: State<'_, AppState>, uris: Vec<String>) -> Result<(
     Ok(())
 }
 
+/// Insert `uris` immediately after the currently-playing track. Falls back to
+/// appending when nothing is playing.
+#[tauri::command]
+async fn play_next_uris(
+    state: State<'_, AppState>,
+    uris: Vec<String>,
+    current_tlid: Option<u32>,
+) -> Result<(), String> {
+    if uris.is_empty() {
+        return Ok(());
+    }
+    let at_position = match current_tlid {
+        Some(tlid) => state
+            .mopidy
+            .tracklist_index(tlid)
+            .await
+            .map_err(|e| e.0)?
+            .map(|i| i + 1),
+        None => None,
+    };
+    state
+        .mopidy
+        .tracklist_add(uris, at_position)
+        .await
+        .map_err(|e| e.0)?;
+    Ok(())
+}
+
+// ── tidal-goodies (favorites) ────────────────────────────────────────────
+
+fn parse_tidal_album_id(uri: &str) -> Result<&str, String> {
+    uri.strip_prefix("tidal:album:")
+        .ok_or_else(|| format!("not a tidal album URI: {uri}"))
+}
+
+#[tauri::command]
+async fn get_tidal_favorite_album_ids(
+    state: State<'_, AppState>,
+) -> Result<Option<Vec<String>>, String> {
+    state
+        .mopidy
+        .goodies_favorite_album_ids()
+        .await
+        .map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn set_tidal_album_favorite(
+    state: State<'_, AppState>,
+    uri: String,
+    favorited: bool,
+) -> Result<bool, String> {
+    let id = parse_tidal_album_id(&uri)?;
+    state
+        .mopidy
+        .goodies_set_album_favorite(id, favorited)
+        .await
+        .map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn refresh_library(state: State<'_, AppState>, uri: Option<String>) -> Result<(), String> {
+    state
+        .mopidy
+        .library_refresh(uri.as_deref())
+        .await
+        .map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_health(
+    state: State<'_, AppState>,
+) -> Result<Option<serde_json::Value>, String> {
+    state.mopidy.goodies_health().await.map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_recent(
+    state: State<'_, AppState>,
+    limit: u32,
+) -> Result<serde_json::Value, String> {
+    state.mopidy.goodies_stats_recent(limit).await.map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_most_played(
+    state: State<'_, AppState>,
+    limit: u32,
+    since: Option<i64>,
+) -> Result<serde_json::Value, String> {
+    state
+        .mopidy
+        .goodies_stats_most_played(limit, since)
+        .await
+        .map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_totals(
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    state.mopidy.goodies_stats_totals().await.map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_top_artists(
+    state: State<'_, AppState>,
+    limit: u32,
+    since: Option<i64>,
+) -> Result<serde_json::Value, String> {
+    state
+        .mopidy
+        .goodies_stats_top_artists(limit, since)
+        .await
+        .map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_top_albums(
+    state: State<'_, AppState>,
+    limit: u32,
+    since: Option<i64>,
+) -> Result<serde_json::Value, String> {
+    state
+        .mopidy
+        .goodies_stats_top_albums(limit, since)
+        .await
+        .map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_by_genre(
+    state: State<'_, AppState>,
+    limit: u32,
+    since: Option<i64>,
+) -> Result<serde_json::Value, String> {
+    state
+        .mopidy
+        .goodies_stats_by_genre(limit, since)
+        .await
+        .map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_by_day_of_week(
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    state.mopidy.goodies_stats_by_day_of_week().await.map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn goodies_stats_by_hour(
+    state: State<'_, AppState>,
+) -> Result<serde_json::Value, String> {
+    state.mopidy.goodies_stats_by_hour().await.map_err(|e| e.0)
+}
+
+/// Append `uris` (resolved to Tracks via library lookup) to the existing
+/// playlist at `playlist_uri` and persist it. Tidal-backed playlists may not
+/// support save and will surface the backend error.
+#[tauri::command]
+async fn add_uris_to_playlist(
+    state: State<'_, AppState>,
+    playlist_uri: String,
+    uris: Vec<String>,
+) -> Result<(), String> {
+    if uris.is_empty() {
+        return Ok(());
+    }
+    let mut pl = state
+        .mopidy
+        .playlist_lookup(&playlist_uri)
+        .await
+        .map_err(|e| e.0)?
+        .ok_or_else(|| "playlist not found".to_string())?;
+    let resolved = state.mopidy.lookup(uris).await.map_err(|e| e.0)?;
+    for tracks in resolved.into_values() {
+        pl.tracks.extend(tracks);
+    }
+    state.mopidy.playlist_save(&pl).await.map_err(|e| e.0)?;
+    Ok(())
+}
+
 #[tauri::command]
 async fn play_tlid(state: State<'_, AppState>, tlid: u32) -> Result<(), String> {
     state.mopidy.playback_play(Some(tlid)).await.map_err(|e| e.0)
@@ -511,6 +694,20 @@ pub fn run() {
             get_queue,
             play_uris,
             enqueue_uris,
+            play_next_uris,
+            add_uris_to_playlist,
+            get_tidal_favorite_album_ids,
+            set_tidal_album_favorite,
+            refresh_library,
+            goodies_health,
+            goodies_stats_recent,
+            goodies_stats_most_played,
+            goodies_stats_totals,
+            goodies_stats_top_artists,
+            goodies_stats_top_albums,
+            goodies_stats_by_genre,
+            goodies_stats_by_day_of_week,
+            goodies_stats_by_hour,
             play_tlid,
             remove_tlid,
             move_track,

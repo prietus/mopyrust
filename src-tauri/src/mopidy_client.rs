@@ -44,6 +44,11 @@ struct RpcResp {
     error: Option<Value>,
 }
 
+#[derive(Deserialize)]
+struct GoodiesFavorite {
+    id: String,
+}
+
 impl Client {
     pub fn new(host: &str, port: u16) -> Self {
         let inner = reqwest::Client::builder()
@@ -54,6 +59,161 @@ impl Client {
     }
 
     pub fn rpc_url(&self) -> String { format!("{}/mopidy/rpc", self.base) }
+
+    fn goodies_url(&self, suffix: &str) -> String {
+        format!("{}/tidal_goodies{suffix}", self.base)
+    }
+
+    /// Returns `Some(ids)` when mopidy-tidal-goodies is reachable; `None` when
+    /// the endpoint isn't installed (404). Other errors propagate.
+    pub async fn goodies_favorite_album_ids(&self) -> Result<Option<Vec<String>>, ClientError> {
+        let resp = self
+            .inner
+            .get(self.goodies_url("/favorites/albums"))
+            .send()
+            .await?;
+        if resp.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+        let resp = resp.error_for_status()?;
+        let items: Vec<GoodiesFavorite> = resp.json().await?;
+        Ok(Some(items.into_iter().map(|i| i.id).collect()))
+    }
+
+    /// Probe goodies. `Ok(None)` when the plugin isn't installed (404).
+    pub async fn goodies_health(&self) -> Result<Option<Value>, ClientError> {
+        let resp = self.inner.get(self.goodies_url("/_health")).send().await?;
+        if resp.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+        let resp = resp.error_for_status()?;
+        Ok(Some(resp.json().await?))
+    }
+
+    pub async fn goodies_stats_recent(&self, limit: u32) -> Result<Value, ClientError> {
+        let url = format!("{}?limit={limit}", self.goodies_url("/stats/recent"));
+        Ok(self
+            .inner
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    pub async fn goodies_stats_most_played(
+        &self,
+        limit: u32,
+        since: Option<i64>,
+    ) -> Result<Value, ClientError> {
+        let mut url = format!("{}?limit={limit}", self.goodies_url("/stats/most-played"));
+        if let Some(s) = since {
+            url.push_str(&format!("&since={s}"));
+        }
+        Ok(self
+            .inner
+            .get(url)
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    pub async fn goodies_stats_totals(&self) -> Result<Value, ClientError> {
+        Ok(self
+            .inner
+            .get(self.goodies_url("/stats/totals"))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    pub async fn goodies_stats_top_artists(
+        &self,
+        limit: u32,
+        since: Option<i64>,
+    ) -> Result<Value, ClientError> {
+        let mut url = format!("{}?limit={limit}", self.goodies_url("/stats/top-artists"));
+        if let Some(s) = since {
+            url.push_str(&format!("&since={s}"));
+        }
+        Ok(self.inner.get(url).send().await?.error_for_status()?.json().await?)
+    }
+
+    pub async fn goodies_stats_top_albums(
+        &self,
+        limit: u32,
+        since: Option<i64>,
+    ) -> Result<Value, ClientError> {
+        let mut url = format!("{}?limit={limit}", self.goodies_url("/stats/top-albums"));
+        if let Some(s) = since {
+            url.push_str(&format!("&since={s}"));
+        }
+        Ok(self.inner.get(url).send().await?.error_for_status()?.json().await?)
+    }
+
+    pub async fn goodies_stats_by_genre(
+        &self,
+        limit: u32,
+        since: Option<i64>,
+    ) -> Result<Value, ClientError> {
+        let mut url = format!("{}?limit={limit}", self.goodies_url("/stats/by-genre"));
+        if let Some(s) = since {
+            url.push_str(&format!("&since={s}"));
+        }
+        Ok(self.inner.get(url).send().await?.error_for_status()?.json().await?)
+    }
+
+    pub async fn goodies_stats_by_day_of_week(&self) -> Result<Value, ClientError> {
+        Ok(self
+            .inner
+            .get(self.goodies_url("/stats/by-day-of-week"))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    pub async fn goodies_stats_by_hour(&self) -> Result<Value, ClientError> {
+        Ok(self
+            .inner
+            .get(self.goodies_url("/stats/by-hour"))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?)
+    }
+
+    /// `Ok(true)` = action succeeded, `Ok(false)` = goodies missing (404).
+    pub async fn goodies_set_album_favorite(
+        &self,
+        id: &str,
+        favorited: bool,
+    ) -> Result<bool, ClientError> {
+        let resp = if favorited {
+            self.inner
+                .post(self.goodies_url("/favorites/albums"))
+                .json(&json!({ "id": id }))
+                .send()
+                .await?
+        } else {
+            self.inner
+                .delete(self.goodies_url(&format!("/favorites/albums/{id}")))
+                .send()
+                .await?
+        };
+        if resp.status() == reqwest::StatusCode::NOT_FOUND {
+            return Ok(false);
+        }
+        resp.error_for_status()?;
+        Ok(true)
+    }
 
     pub fn image_url(&self, uri: &str) -> String {
         if uri.starts_with("http://") || uri.starts_with("https://") {
@@ -147,6 +307,12 @@ impl Client {
         Ok(())
     }
 
+    /// 0-based position of `tlid` in the current tracklist, or `None` if absent.
+    pub async fn tracklist_index(&self, tlid: u32) -> Result<Option<u32>, ClientError> {
+        let v = self.call("core.tracklist.index", json!({ "tlid": tlid })).await?;
+        Ok(serde_json::from_value(v).unwrap_or(None))
+    }
+
     pub async fn tracklist_remove(&self, tlids: Vec<u32>) -> Result<Vec<TlTrack>, ClientError> {
         let params = json!({ "criteria": { "tlid": tlids } });
         let v = self.call("core.tracklist.remove", params).await?;
@@ -179,10 +345,30 @@ impl Client {
         Ok(serde_json::from_value(v)?)
     }
 
+    pub async fn playlist_save(
+        &self,
+        playlist: &crate::models::Playlist,
+    ) -> Result<Option<crate::models::Playlist>, ClientError> {
+        let v = self
+            .call("core.playlists.save", json!({ "playlist": playlist }))
+            .await?;
+        if v.is_null() { return Ok(None); }
+        Ok(serde_json::from_value(v)?)
+    }
+
     pub async fn get_distinct(&self, field: &str) -> Result<Vec<String>, ClientError> {
         let params = json!({ "field": field, "query": {} });
         let v = self.call("core.library.get_distinct", params).await?;
         Ok(serde_json::from_value(v).unwrap_or_default())
+    }
+
+    pub async fn library_refresh(&self, uri: Option<&str>) -> Result<(), ClientError> {
+        let params = match uri {
+            Some(u) => json!({ "uri": u }),
+            None => json!({}),
+        };
+        self.call("core.library.refresh", params).await?;
+        Ok(())
     }
 
     // ── playback ────────────────────────────────────────────────────────

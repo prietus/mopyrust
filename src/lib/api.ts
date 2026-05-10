@@ -4,12 +4,21 @@ import type {
   AlbumMeta,
   ArtistMeta,
   ConfigInfo,
+  DayOfWeekBucket,
+  GenreCount,
+  GoodiesHealth,
+  HourBucket,
   LibRef,
   LyricsResult,
+  MostPlayedTrack,
   PlaybackSnapshot,
   Playlist,
+  RecentPlay,
   SearchResult,
+  StatsTotals,
   TlTrack,
+  TopAlbum,
+  TopArtist,
   Track,
 } from "./types";
 
@@ -46,6 +55,48 @@ export const api = {
   },
   enqueueUris(uris: string[]) {
     return invoke<void>("enqueue_uris", { uris });
+  },
+  playNextUris(uris: string[], currentTlid: number | null) {
+    return invoke<void>("play_next_uris", { uris, currentTlid });
+  },
+  addUrisToPlaylist(playlistUri: string, uris: string[]) {
+    return invoke<void>("add_uris_to_playlist", { playlistUri, uris });
+  },
+  getTidalFavoriteAlbumIds() {
+    return invoke<string[] | null>("get_tidal_favorite_album_ids");
+  },
+  setTidalAlbumFavorite(uri: string, favorited: boolean) {
+    return invoke<boolean>("set_tidal_album_favorite", { uri, favorited });
+  },
+  refreshLibrary(uri: string | null) {
+    return invoke<void>("refresh_library", { uri });
+  },
+  goodiesHealth() {
+    return invoke<GoodiesHealth | null>("goodies_health");
+  },
+  goodiesStatsRecent(limit: number) {
+    return invoke<RecentPlay[]>("goodies_stats_recent", { limit });
+  },
+  goodiesStatsMostPlayed(limit: number, since: number | null) {
+    return invoke<MostPlayedTrack[]>("goodies_stats_most_played", { limit, since });
+  },
+  goodiesStatsTotals() {
+    return invoke<StatsTotals>("goodies_stats_totals");
+  },
+  goodiesStatsTopArtists(limit: number, since: number | null) {
+    return invoke<TopArtist[]>("goodies_stats_top_artists", { limit, since });
+  },
+  goodiesStatsTopAlbums(limit: number, since: number | null) {
+    return invoke<TopAlbum[]>("goodies_stats_top_albums", { limit, since });
+  },
+  goodiesStatsByGenre(limit: number, since: number | null) {
+    return invoke<GenreCount[]>("goodies_stats_by_genre", { limit, since });
+  },
+  goodiesStatsByDayOfWeek() {
+    return invoke<DayOfWeekBucket[]>("goodies_stats_by_day_of_week");
+  },
+  goodiesStatsByHour() {
+    return invoke<HourBucket[]>("goodies_stats_by_hour");
   },
   playTlid(tlid: number) {
     return invoke<void>("play_tlid", { tlid });

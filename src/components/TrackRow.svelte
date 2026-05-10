@@ -4,6 +4,7 @@
   import { fmtMs, artistsOf, albumOf, backendOf } from "../lib/format";
   import Icon from "./Icon.svelte";
   import BackendBadge from "./BackendBadge.svelte";
+  import ContextMenu, { type MenuItem } from "./ContextMenu.svelte";
 
   type Props = {
     track: Track;
@@ -12,6 +13,8 @@
     showBackend?: boolean;
   };
   let { track, index = null, showAlbum = true, showBackend = true }: Props = $props();
+
+  let menuPos = $state<{ x: number; y: number } | null>(null);
 
   function play() {
     store.playUri(track.uri);
@@ -26,6 +29,76 @@
       play();
     }
   }
+
+  function openMenu(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    store.ensurePlaylists();
+    menuPos = { x: e.clientX, y: e.clientY };
+  }
+
+  let menuItems = $derived.by<MenuItem[]>(() => {
+    const albumUri = track.album?.uri ?? null;
+    const albumName = track.album?.name ?? null;
+    const firstArtist = track.artists[0]?.name ?? null;
+    const trackUri = track.uri;
+    return [
+      { kind: "item", label: "Play", icon: "play", action: () => store.playUri(trackUri) },
+      {
+        kind: "item",
+        label: "Play next",
+        icon: "next",
+        action: () => store.playNextUris([trackUri]),
+      },
+      {
+        kind: "item",
+        label: "Add to queue",
+        icon: "plus",
+        action: () => store.enqueueUri(trackUri),
+      },
+      {
+        kind: "submenu",
+        label: "Add to playlist…",
+        icon: "list",
+        items: store.playlists.length
+          ? store.playlists.map((p) => ({
+              kind: "item" as const,
+              label: p.name,
+              action: () => store.addUrisToPlaylist(p.uri, [trackUri]),
+            }))
+          : [{ kind: "item" as const, label: "(no playlists)", action: () => {}, disabled: true }],
+      },
+      { kind: "separator" },
+      {
+        kind: "item",
+        label: "Go to album",
+        icon: "disc",
+        disabled: !albumUri || !albumName,
+        action: () => {
+          if (albumUri && albumName) {
+            store.navTo({ kind: "album-detail", uri: albumUri, label: albumName });
+          }
+        },
+      },
+      {
+        kind: "item",
+        label: "Go to artist",
+        icon: "user",
+        disabled: !firstArtist,
+        action: () => {
+          if (firstArtist) store.navTo({ kind: "artist-detail", name: firstArtist });
+        },
+      },
+      { kind: "separator" },
+      {
+        kind: "item",
+        label: "Copy URI",
+        action: () => {
+          navigator.clipboard.writeText(trackUri).catch((e) => console.error("clipboard", e));
+        },
+      },
+    ];
+  });
 </script>
 
 <div
@@ -34,6 +107,7 @@
   tabindex="0"
   onclick={play}
   onkeydown={rowKey}
+  oncontextmenu={openMenu}
   style={index === null ? '--num-col: 0' : '--num-col: 28px'}
 >
   {#if index !== null}
@@ -53,6 +127,15 @@
     <Icon name="plus" size={14} stroke={2} />
   </button>
 </div>
+
+{#if menuPos}
+  <ContextMenu
+    x={menuPos.x}
+    y={menuPos.y}
+    items={menuItems}
+    onClose={() => (menuPos = null)}
+  />
+{/if}
 
 <style>
   .row {

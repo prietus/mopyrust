@@ -1,7 +1,7 @@
 <script lang="ts">
   import { store } from "../lib/store.svelte";
   import { api } from "../lib/api";
-  import { fmtTime, fmtAudio, artistsOf, albumOf, backendOf } from "../lib/format";
+  import { fmtTime, fmtAudio, sourceFormat, artistsOf, albumOf, backendOf } from "../lib/format";
   import Icon from "./Icon.svelte";
   import Cover from "./Cover.svelte";
   import BackendBadge from "./BackendBadge.svelte";
@@ -29,7 +29,7 @@
     <Cover uri={store.current?.uri} size={52} radius="var(--radius-sm)" />
     <div class="meta truncate">
       <div class="title truncate">
-        {store.current ? store.current.name || store.current.uri : "nada sonando"}
+        {store.current ? store.current.name || store.current.uri : "nothing playing"}
       </div>
       <div class="sub truncate">
         {store.current ? `${artistsOf(store.current) || "—"} · ${albumOf(store.current) || "—"}` : ""}
@@ -66,6 +66,9 @@
   </div>
 
   <div class="right">
+    {#if store.current && sourceFormat(store.current.uri)}
+      <span class="pill">{sourceFormat(store.current.uri)}</span>
+    {/if}
     {#if store.audioFormat}
       <span class="pill accent">{fmtAudio(store.audioFormat)}</span>
     {/if}

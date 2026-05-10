@@ -13,6 +13,7 @@
     { kind: "playlists", label: "Playlists", icon: "list" },
     { kind: "browse", label: "Browse", icon: "folder" },
     { kind: "queue", label: "Queue", icon: "list" },
+    { kind: "history", label: "History", icon: "clock" },
   ];
 
   function go(kind: Section["kind"]) {

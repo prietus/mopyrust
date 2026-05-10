@@ -163,3 +163,76 @@ export interface ArtistMeta {
   info: MbArtistInfo | null;
   wiki: WikiSummary | null;
 }
+
+// ── tidal-goodies (optional server companion) ──────────────────────────
+
+export interface GoodiesHealth {
+  version: string;
+  features: {
+    favorites: boolean;
+    favorites_active: boolean;
+    stats: boolean;
+  };
+}
+
+export interface RecentPlay {
+  played_at: number; // unix seconds
+  track_uri: string;
+  name: string;
+  artist: string;
+  album: string;
+  duration_ms: number;
+  played_ms: number;
+  completed: boolean;
+}
+
+export interface MostPlayedTrack {
+  track_uri: string;
+  name: string;
+  artist: string;
+  album: string;
+  plays: number;
+  total_played_ms: number;
+}
+
+export interface StatsTotals {
+  total_plays: number;
+  total_played_ms: number;
+  unique_tracks: number;
+  unique_artists: number;
+  unique_albums: number;
+  completed_plays: number;
+}
+
+export interface TopArtist {
+  artist: string;
+  plays: number;
+  total_played_ms: number;
+  sample_album_uri: string | null;
+}
+
+export interface TopAlbum {
+  artist: string;
+  album: string;
+  album_uri: string | null;
+  plays: number;
+  total_played_ms: number;
+}
+
+export interface GenreCount {
+  genre: string;
+  plays: number;
+  total_played_ms: number;
+}
+
+export interface DayOfWeekBucket {
+  dow: number; // 0=Sun..6=Sat
+  plays: number;
+  total_played_ms: number;
+}
+
+export interface HourBucket {
+  hour: number; // 0..23
+  plays: number;
+  total_played_ms: number;
+}

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { store } from "../lib/store.svelte";
   import { api } from "../lib/api";
-  import { fmtTime, fmtMs, fmtAudio, artistsOf, albumOf, backendOf } from "../lib/format";
+  import { fmtTime, fmtMs, fmtAudio, sourceFormat, artistsOf, albumOf, backendOf } from "../lib/format";
   import { parseSynced, activeLineIndex } from "../lib/lrc";
   import Icon from "./Icon.svelte";
   import BackendBadge from "./BackendBadge.svelte";
@@ -120,6 +120,9 @@
           {/if}
           {#if year}
             <span class="pill">{String(year).split("-")[0]}</span>
+          {/if}
+          {#if store.current && sourceFormat(store.current.uri)}
+            <span class="pill">{sourceFormat(store.current.uri)}</span>
           {/if}
           {#if store.audioFormat}
             <span class="pill accent">{fmtAudio(store.audioFormat)}</span>

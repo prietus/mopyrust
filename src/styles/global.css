@@ -213,6 +213,18 @@ a {
 .btn.primary:hover {
   background: color-mix(in oklab, var(--accent), white 8%);
 }
+.btn.icon-only {
+  padding: 8px;
+  width: 34px;
+  justify-content: center;
+}
+.btn.is-favorited {
+  color: #e87a8a;
+  border-color: color-mix(in oklab, #e87a8a, transparent 70%);
+}
+.btn.is-favorited svg path {
+  fill: currentColor;
+}
 
 input[type="text"],
 input[type="search"] {

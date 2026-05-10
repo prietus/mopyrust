@@ -9,13 +9,22 @@ import type {
   ConfigInfo,
   ConnEvent,
   ConnState,
+  DayOfWeekBucket,
+  GenreCount,
+  GoodiesHealth,
+  HourBucket,
   LibRef,
   LyricsResult,
+  MostPlayedTrack,
   PlayState,
   Playlist,
   PlaybackSnapshot,
+  RecentPlay,
   SearchResult,
+  StatsTotals,
   TlTrack,
+  TopAlbum,
+  TopArtist,
   Track,
 } from "./types";
 
@@ -27,6 +36,7 @@ export type Section =
   | { kind: "playlists" }
   | { kind: "browse" }
   | { kind: "queue" }
+  | { kind: "history" }
   | { kind: "album-detail"; uri: string; label: string }
   | { kind: "artist-detail"; name: string }
   | { kind: "playlist-detail"; uri: string; label: string };
@@ -114,6 +124,32 @@ class Store {
   // config
   config: ConfigInfo | null = $state(null);
 
+  // mopidy-tidal-goodies (optional companion). One probe at startup.
+  goodiesHealth: GoodiesHealth | null = $state(null);
+  goodiesProbed = $state(false);
+
+  // tidal-goodies favorites (set of Tidal numeric IDs).
+  tidalFavoriteAlbums: Set<string> | null = $state(null);
+  tidalFavoritesLoading = $state(false);
+
+  // tidal-goodies stats
+  recentPlays: RecentPlay[] | null = $state(null);
+  mostPlayed: MostPlayedTrack[] | null = $state(null);
+  statsTotals: StatsTotals | null = $state(null);
+  topArtists: TopArtist[] | null = $state(null);
+  topAlbums: TopAlbum[] | null = $state(null);
+  byGenre: GenreCount[] | null = $state(null);
+  byDayOfWeek: DayOfWeekBucket[] | null = $state(null);
+  byHour: HourBucket[] | null = $state(null);
+  recentPlaysLoading = $state(false);
+  mostPlayedLoading = $state(false);
+  statsTotalsLoading = $state(false);
+  topArtistsLoading = $state(false);
+  topAlbumsLoading = $state(false);
+  byGenreLoading = $state(false);
+  byDayOfWeekLoading = $state(false);
+  byHourLoading = $state(false);
+
   // ── derived ─────────────────────────────────────────────────────────────
 
   get section(): Section {
@@ -159,6 +195,12 @@ class Store {
       else if (s.kind === "playlists") this.ensurePlaylists();
       else if (s.kind === "browse") this.ensureBrowse();
       else if (s.kind === "queue") this.refreshQueue();
+      else if (s.kind === "history") {
+        this.ensureGoodiesHealth().then(() => {
+          this.ensureRecentPlays();
+          this.ensureStatsTotals();
+        });
+      }
     }
   }
 
@@ -439,6 +481,212 @@ class Store {
   async enqueueUris(uris: string[]) {
     try { await api.enqueueUris(uris); } catch (e) { console.error("enqueueUris", e); }
   }
+  async playNextUris(uris: string[]) {
+    try { await api.playNextUris(uris, this.currentTlid); }
+    catch (e) { console.error("playNextUris", e); }
+  }
+  async addUrisToPlaylist(playlistUri: string, uris: string[]) {
+    try {
+      await api.addUrisToPlaylist(playlistUri, uris);
+      // Invalidate the cached detail so a re-open re-fetches.
+      delete this.playlistDetail[playlistUri];
+    } catch (e) {
+      console.error("addUrisToPlaylist", e);
+      throw e;
+    }
+  }
+
+  // ── tidal-goodies (favorites + stats, optional) ─────────────────────────
+
+  async ensureGoodiesHealth() {
+    if (this.goodiesProbed) return;
+    this.goodiesProbed = true;
+    try {
+      this.goodiesHealth = await api.goodiesHealth();
+    } catch (e) {
+      console.error("goodies health", e);
+    }
+  }
+
+  get tidalFavoritesAvailable(): boolean {
+    return !!this.goodiesHealth?.features.favorites_active;
+  }
+
+  get statsAvailable(): boolean {
+    return !!this.goodiesHealth?.features.stats;
+  }
+
+  async ensureTidalFavorites() {
+    await this.ensureGoodiesHealth();
+    if (!this.tidalFavoritesAvailable) return;
+    if (this.tidalFavoriteAlbums || this.tidalFavoritesLoading) return;
+    this.tidalFavoritesLoading = true;
+    try {
+      const ids = await api.getTidalFavoriteAlbumIds();
+      this.tidalFavoriteAlbums = new Set(ids ?? []);
+    } catch (e) {
+      console.error("tidal favorites", e);
+    } finally {
+      this.tidalFavoritesLoading = false;
+    }
+  }
+
+  async ensureRecentPlays(force = false) {
+    if (this.recentPlaysLoading) return;
+    if (this.recentPlays && !force) return;
+    if (!this.statsAvailable) return;
+    this.recentPlaysLoading = true;
+    try {
+      this.recentPlays = await api.goodiesStatsRecent(50);
+    } catch (e) {
+      console.error("recent plays", e);
+    } finally {
+      this.recentPlaysLoading = false;
+    }
+  }
+
+  async ensureMostPlayed(force = false) {
+    if (this.mostPlayedLoading) return;
+    if (this.mostPlayed && !force) return;
+    if (!this.statsAvailable) return;
+    this.mostPlayedLoading = true;
+    try {
+      this.mostPlayed = await api.goodiesStatsMostPlayed(50, null);
+    } catch (e) {
+      console.error("most played", e);
+    } finally {
+      this.mostPlayedLoading = false;
+    }
+  }
+
+  async ensureStatsTotals(force = false) {
+    if (this.statsTotalsLoading) return;
+    if (this.statsTotals && !force) return;
+    if (!this.statsAvailable) return;
+    this.statsTotalsLoading = true;
+    try {
+      this.statsTotals = await api.goodiesStatsTotals();
+    } catch (e) {
+      console.error("stats totals", e);
+    } finally {
+      this.statsTotalsLoading = false;
+    }
+  }
+
+  async ensureTopArtists(force = false) {
+    if (this.topArtistsLoading) return;
+    if (this.topArtists && !force) return;
+    if (!this.statsAvailable) return;
+    this.topArtistsLoading = true;
+    try {
+      this.topArtists = await api.goodiesStatsTopArtists(10, null);
+    } catch (e) {
+      console.error("top artists", e);
+    } finally {
+      this.topArtistsLoading = false;
+    }
+  }
+
+  async ensureTopAlbums(force = false) {
+    if (this.topAlbumsLoading) return;
+    if (this.topAlbums && !force) return;
+    if (!this.statsAvailable) return;
+    this.topAlbumsLoading = true;
+    try {
+      this.topAlbums = await api.goodiesStatsTopAlbums(10, null);
+      // Pre-fetch covers for the album thumbnails.
+      for (const a of this.topAlbums ?? []) {
+        if (a.album_uri) this.ensureCover(a.album_uri);
+      }
+    } catch (e) {
+      console.error("top albums", e);
+    } finally {
+      this.topAlbumsLoading = false;
+    }
+  }
+
+  async ensureByGenre(force = false) {
+    if (this.byGenreLoading) return;
+    if (this.byGenre && !force) return;
+    if (!this.statsAvailable) return;
+    this.byGenreLoading = true;
+    try {
+      this.byGenre = await api.goodiesStatsByGenre(10, null);
+    } catch (e) {
+      console.error("by genre", e);
+    } finally {
+      this.byGenreLoading = false;
+    }
+  }
+
+  async ensureByDayOfWeek(force = false) {
+    if (this.byDayOfWeekLoading) return;
+    if (this.byDayOfWeek && !force) return;
+    if (!this.statsAvailable) return;
+    this.byDayOfWeekLoading = true;
+    try {
+      this.byDayOfWeek = await api.goodiesStatsByDayOfWeek();
+    } catch (e) {
+      console.error("by day of week", e);
+    } finally {
+      this.byDayOfWeekLoading = false;
+    }
+  }
+
+  async ensureByHour(force = false) {
+    if (this.byHourLoading) return;
+    if (this.byHour && !force) return;
+    if (!this.statsAvailable) return;
+    this.byHourLoading = true;
+    try {
+      this.byHour = await api.goodiesStatsByHour();
+    } catch (e) {
+      console.error("by hour", e);
+    } finally {
+      this.byHourLoading = false;
+    }
+  }
+
+  isAlbumFavorited(uri: string): boolean {
+    if (!this.tidalFavoriteAlbums) return false;
+    if (!uri.startsWith("tidal:album:")) return false;
+    return this.tidalFavoriteAlbums.has(uri.slice("tidal:album:".length));
+  }
+
+  async toggleAlbumFavorite(uri: string) {
+    if (!uri.startsWith("tidal:album:")) return;
+    if (!this.tidalFavoriteAlbums) return;
+    const id = uri.slice("tidal:album:".length);
+    const was = this.tidalFavoriteAlbums.has(id);
+    // Optimistic update — replace the Set so $state reactivity fires.
+    const next = new Set(this.tidalFavoriteAlbums);
+    if (was) next.delete(id); else next.add(id);
+    this.tidalFavoriteAlbums = next;
+    try {
+      const ok = await api.setTidalAlbumFavorite(uri, !was);
+      if (!ok) {
+        // Server-side plugin disappeared mid-session — revert and forget
+        // health so the next probe re-reads from the server.
+        const revert = new Set(this.tidalFavoriteAlbums);
+        if (was) revert.add(id); else revert.delete(id);
+        this.tidalFavoriteAlbums = revert;
+        this.goodiesHealth = null;
+        this.goodiesProbed = false;
+        return;
+      }
+      // Bust mopidy-tidal's cache so tidal:my_albums reflects the change, and
+      // invalidate our own albums view so the next visit re-fetches.
+      api.refreshLibrary("tidal:my_albums").catch((e) =>
+        console.warn("refreshLibrary", e),
+      );
+      this.albumsLoaded = false;
+    } catch (e) {
+      console.error("toggleAlbumFavorite", e);
+      const revert = new Set(this.tidalFavoriteAlbums);
+      if (was) revert.add(id); else revert.delete(id);
+      this.tidalFavoriteAlbums = revert;
+    }
+  }
 
   // ── playback refresh (snapshot) ────────────────────────────────────────
 
@@ -517,6 +765,9 @@ class Store {
     // Initial pull.
     await this.refreshPlayback();
     await this.refreshQueue();
+    // Probe goodies once on boot so favorites/stats UIs know whether to
+    // render. Cheap GET; failures are silent.
+    this.ensureGoodiesHealth();
   }
 }
 

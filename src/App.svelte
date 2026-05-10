@@ -13,6 +13,7 @@
   import PlaylistDetail from "./components/PlaylistDetail.svelte";
   import Browse from "./components/Browse.svelte";
   import Queue from "./components/Queue.svelte";
+  import History from "./components/History.svelte";
   import Settings from "./components/Settings.svelte";
 
   let settingsOpen = $state(false);
@@ -52,6 +53,8 @@
         <Browse />
       {:else if store.section.kind === "queue"}
         <Queue />
+      {:else if store.section.kind === "history"}
+        <History />
       {:else if store.section.kind === "album-detail"}
         <AlbumDetail uri={store.section.uri} label={store.section.label} />
       {:else if store.section.kind === "artist-detail"}

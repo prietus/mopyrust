@@ -50,11 +50,23 @@
 
   let bioOpen = $state(false);
 
+  let isTidal = $derived(backendOf(uri) === "tidal");
+  let canFavorite = $derived(isTidal && store.tidalFavoritesAvailable);
+  let isFavorited = $derived(store.isAlbumFavorited(uri));
+
+  // Probe goodies + load favorites the first time a Tidal album is opened.
+  $effect(() => {
+    if (isTidal) store.ensureTidalFavorites();
+  });
+
   function playAll() {
     if (tracks.length) store.playUris(tracks.map((t) => t.uri));
   }
   function queueAll() {
     if (tracks.length) store.enqueueUris(tracks.map((t) => t.uri));
+  }
+  function toggleFavorite() {
+    store.toggleAlbumFavorite(uri);
   }
 </script>
 
@@ -108,6 +120,17 @@
           <Icon name="plus" size={13} stroke={2} />
           add to queue
         </button>
+        {#if canFavorite}
+          <button
+            class="btn icon-only"
+            class:is-favorited={isFavorited}
+            onclick={toggleFavorite}
+            aria-label={isFavorited ? "remove from favorites" : "add to favorites"}
+            title={isFavorited ? "remove from favorites" : "add to favorites"}
+          >
+            <Icon name="heart" size={13} stroke={1.7} />
+          </button>
+        {/if}
       </div>
     </div>
   </div>
