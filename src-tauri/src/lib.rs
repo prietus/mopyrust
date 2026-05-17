@@ -5,6 +5,7 @@ mod models;
 mod mopidy_client;
 mod mpd_worker;
 mod mpris;
+mod visualizer;
 
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex};
@@ -336,6 +337,25 @@ async fn goodies_health(
     state: State<'_, AppState>,
 ) -> Result<Option<serde_json::Value>, String> {
     state.mopidy.goodies_health().await.map_err(|e| e.0)
+}
+
+#[tauri::command]
+async fn visualizer_start(
+    app: tauri::AppHandle,
+    handle: State<'_, Arc<visualizer::VisualizerHandle>>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let host = state.cfg.lock().unwrap().host.clone();
+    visualizer::start(app, (*handle).clone(), host).await;
+    Ok(())
+}
+
+#[tauri::command]
+async fn visualizer_stop(
+    handle: State<'_, Arc<visualizer::VisualizerHandle>>,
+) -> Result<(), String> {
+    visualizer::stop((*handle).clone()).await;
+    Ok(())
 }
 
 #[tauri::command]
@@ -692,6 +712,7 @@ pub fn run() {
                 lyrics_cache: lyrics::LyricsCache::new(),
             });
             app.manage(metadata::MetadataState::new());
+            app.manage(Arc::new(visualizer::VisualizerHandle::default()));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -739,6 +760,8 @@ pub fn run() {
             restart_app,
             get_album_metadata,
             get_artist_metadata,
+            visualizer_start,
+            visualizer_stop,
         ])
         .run(tauri::generate_context!())
         .expect("error while running mopyrust");

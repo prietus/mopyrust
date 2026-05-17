@@ -109,7 +109,7 @@ class Store {
   coverPending: Record<string, boolean> = $state({});
 
   // ui prefs
-  nowPlayingPane: "none" | "queue" | "lyrics" = $state("none");
+  nowPlayingPane: "none" | "queue" | "lyrics" | "viz" = $state("none");
 
   // lyrics cache (per track URI). null = looked up, no result.
   lyrics: Record<string, LyricsResult | null> = $state({});

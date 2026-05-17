@@ -6,6 +6,7 @@
   import Icon from "./Icon.svelte";
   import BackendBadge from "./BackendBadge.svelte";
   import Cover from "./Cover.svelte";
+  import Visualizer from "./Visualizer.svelte";
 
   let seekDrag = $state<number | null>(null);
   let elapsed = $derived(seekDrag ?? store.elapsed);
@@ -15,6 +16,7 @@
   let pane = $derived(store.nowPlayingPane);
   let showQueue = $derived(pane === "queue");
   let showLyrics = $derived(pane === "lyrics");
+  let showViz = $derived(pane === "viz");
 
   function onSeekInput(e: Event) {
     seekDrag = +(e.target as HTMLInputElement).value;
@@ -28,7 +30,7 @@
   function onVolume(e: Event) {
     store.setVolume(+(e.target as HTMLInputElement).value);
   }
-  function setPane(next: "none" | "queue" | "lyrics") {
+  function setPane(next: "none" | "queue" | "lyrics" | "viz") {
     store.nowPlayingPane = store.nowPlayingPane === next ? "none" : next;
   }
 
@@ -92,6 +94,15 @@
       onclick={() => setPane("queue")}
     >
       <Icon name="list" size={15} stroke={1.7} />
+    </button>
+    <button
+      class="pane-toggle"
+      class:active={showViz}
+      aria-label="visualizer"
+      title="visualizer"
+      onclick={() => setPane("viz")}
+    >
+      <Icon name="equalizer" size={15} stroke={1.7} />
     </button>
   </div>
 
@@ -254,6 +265,8 @@
           {/if}
         </div>
       </aside>
+    {:else if showViz}
+      <Visualizer />
     {/if}
   </div>
 </div>
